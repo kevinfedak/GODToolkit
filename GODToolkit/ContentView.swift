@@ -13,7 +13,7 @@ final class ConverterModel: ObservableObject {
     @Published var port = "21"
     @Published var username = ""
     @Published var password = ""
-    @Published var remotePath = "/Content/0000000000000000"
+    @Published var remotePath = "/Hdd1/Games"
     @Published var log = ""
     @Published var showingISO = false
     @Published var showingFolder = false
@@ -134,7 +134,7 @@ struct ContentView: View {
                     Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 10) {
                         GridRow { Text("Console host"); TextField("192.168.1.50", text: $model.host); Text("Port"); TextField("21", text: $model.port).frame(width: 64) }
                         GridRow { Text("Username"); TextField("FTP username", text: $model.username); Text("Password"); SecureField("FTP password", text: $model.password) }
-                        GridRow { Text("Destination"); TextField("/Content/0000000000000000", text: $model.remotePath).gridCellColumns(3) }
+                        GridRow { Text("Destination"); TextField("/Hdd1/Games", text: $model.remotePath).gridCellColumns(3) }
                     }.padding(.top, 12)
                     Text("FTP is unencrypted. Use a trusted local network. Credentials are kept in memory for this session only.")
                         .font(.caption).foregroundStyle(.secondary).padding(.top, 6)
