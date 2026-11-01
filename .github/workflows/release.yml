@@ -1,0 +1,37 @@
+name: Build and release macOS app
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - name: Build converter helper for Apple Silicon and Intel
+        run: |
+          cargo install --git https://github.com/iliazeus/iso2god-rs.git --root "$RUNNER_TEMP/iso2god-arm" --target aarch64-apple-darwin --locked
+          cargo install --git https://github.com/iliazeus/iso2god-rs.git --root "$RUNNER_TEMP/iso2god-intel" --target x86_64-apple-darwin --locked
+          mkdir -p GODToolkit/Resources
+          lipo -create "$RUNNER_TEMP/iso2god-arm/bin/iso2god" "$RUNNER_TEMP/iso2god-intel/bin/iso2god" -output GODToolkit/Resources/iso2god
+          chmod +x GODToolkit/Resources/iso2god
+          curl -fsSL https://raw.githubusercontent.com/iliazeus/iso2god-rs/master/LICENSE -o GODToolkit/Resources/iso2god-LICENSE.txt
+      - name: Build app
+        run: |
+          xcodebuild -project GODToolkit.xcodeproj -scheme GODToolkit -configuration Release -destination 'generic/platform=macOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+          mkdir -p dist
+          cp -R build/Build/Products/Release/GODToolkit.app dist/
+          ditto -c -k --sequesterRsrc --keepParent dist/GODToolkit.app dist/GODToolkit-macOS.zip
+          hdiutil create -volname "GOD Toolkit" -srcfolder dist/GODToolkit.app -ov -format UDZO dist/GODToolkit-macOS.dmg
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/GODToolkit-macOS.dmg dist/GODToolkit-macOS.zip --title "GOD Toolkit ${GITHUB_REF_NAME}" --generate-notes
