@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "iso2god helper is missing. Build a release from the provided GitHub Actions workflow." >&2
+exit 127
