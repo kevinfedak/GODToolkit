@@ -3,7 +3,6 @@ name: Build and release macOS app
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -31,7 +30,7 @@ jobs:
           cp -R build/Build/Products/Release/GODToolkit.app dist/
           ditto -c -k --sequesterRsrc --keepParent dist/GODToolkit.app dist/GODToolkit-macOS.zip
           hdiutil create -volname "GOD Toolkit" -srcfolder dist/GODToolkit.app -ov -format UDZO dist/GODToolkit-macOS.dmg
-      - name: Publish GitHub Release
+      - name: Upload assets to the published GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" dist/GODToolkit-macOS.dmg dist/GODToolkit-macOS.zip --title "GOD Toolkit ${GITHUB_REF_NAME}" --generate-notes
+        run: gh release upload "${GITHUB_REF_NAME}" dist/GODToolkit-macOS.dmg dist/GODToolkit-macOS.zip --clobber
