@@ -29,7 +29,7 @@ FTP credentials are held only in memory for the current app session. FTP is unen
 
 ## Release
 
-Pushing a `v*` tag runs `.github/workflows/release.yml` on a macOS runner, builds a universal `.app`, packages it as a DMG, and publishes the DMG to a GitHub Release. The app is unsigned; macOS may require the user to approve opening it. Developer ID signing and notarization can be added by configuring repository secrets.
+Pushing a `v*` tag runs `.github/workflows/release.yml` on a macOS runner, builds a universal `.app`, packages it as a DMG, generates a third-party license report from the same helper checkout, and publishes the DMG, ZIP, and report to a GitHub Release. The report is bundled inside the app as `THIRD-PARTY-LICENSES.html`. The app is unsigned; macOS may require the user to approve opening it. Developer ID signing and notarization can be added by configuring repository secrets.
 
 ## Credits
 
@@ -37,4 +37,4 @@ Made with Codex. The interface and packaging in this repository are original. Co
 
 ## License
 
-The original interface and workflow files are provided under the MIT License. See `LICENSE`.
+The original interface and workflow files are provided under the MIT License. See `LICENSE`. The bundled `iso2god` helper is separately licensed under MIT; its license is included in the app resources.
