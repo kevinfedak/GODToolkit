@@ -15,22 +15,33 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
-      - name: Build converter helper for Apple Silicon and Intel
+      - name: Build converter and generate dependency license report
         run: |
-          cargo install --git https://github.com/iliazeus/iso2god-rs.git --root "$RUNNER_TEMP/iso2god-arm" --target aarch64-apple-darwin --locked
-          cargo install --git https://github.com/iliazeus/iso2god-rs.git --root "$RUNNER_TEMP/iso2god-intel" --target x86_64-apple-darwin --locked
+          git clone --depth 1 https://github.com/iliazeus/iso2god-rs.git "$RUNNER_TEMP/iso2god-src"
+          cp tools/iso2god-about.toml "$RUNNER_TEMP/iso2god-src/about.toml"
+          cargo install --locked --features cli cargo-about
+          cd "$RUNNER_TEMP/iso2god-src"
+          cargo about generate -o "$RUNNER_TEMP/THIRD-PARTY-LICENSES.html" "$GITHUB_WORKSPACE/tools/third-party-licenses.hbs"
+          cargo install --path "$RUNNER_TEMP/iso2god-src" --root "$RUNNER_TEMP/iso2god-arm" --target aarch64-apple-darwin --locked
+          cargo install --path "$RUNNER_TEMP/iso2god-src" --root "$RUNNER_TEMP/iso2god-intel" --target x86_64-apple-darwin --locked
+          cd "$GITHUB_WORKSPACE"
           mkdir -p GODToolkit/Resources
           lipo -create "$RUNNER_TEMP/iso2god-arm/bin/iso2god" "$RUNNER_TEMP/iso2god-intel/bin/iso2god" -output GODToolkit/Resources/iso2god
           chmod +x GODToolkit/Resources/iso2god
-          curl -fsSL https://raw.githubusercontent.com/iliazeus/iso2god-rs/master/LICENSE -o GODToolkit/Resources/iso2god-LICENSE.txt
+          cp "$RUNNER_TEMP/iso2god-src/LICENSE" GODToolkit/Resources/iso2god-LICENSE.txt
       - name: Build app
         run: |
           xcodebuild -project GODToolkit.xcodeproj -scheme GODToolkit -configuration Release -destination 'generic/platform=macOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
           mkdir -p dist
           cp -R build/Build/Products/Release/GODToolkit.app dist/
+          mkdir -p dist/GODToolkit.app/Contents/Resources
+          cp "$RUNNER_TEMP/THIRD-PARTY-LICENSES.html" dist/GODToolkit.app/Contents/Resources/THIRD-PARTY-LICENSES.html
+          cp "$RUNNER_TEMP/THIRD-PARTY-LICENSES.html" dist/THIRD-PARTY-LICENSES.html
           ditto -c -k --sequesterRsrc --keepParent dist/GODToolkit.app dist/GODToolkit-macOS.zip
           hdiutil create -volname "GOD Toolkit" -srcfolder dist/GODToolkit.app -ov -format UDZO dist/GODToolkit-macOS.dmg
-      - name: Upload assets to the published GitHub Release
+      - name: Create release and upload assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${GITHUB_REF_NAME}" dist/GODToolkit-macOS.dmg dist/GODToolkit-macOS.zip --clobber
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --title "GOD Toolkit ${GITHUB_REF_NAME}" --generate-notes
+          gh release upload "${GITHUB_REF_NAME}" dist/GODToolkit-macOS.dmg dist/GODToolkit-macOS.zip dist/THIRD-PARTY-LICENSES.html --clobber
