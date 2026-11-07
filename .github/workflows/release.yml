@@ -3,15 +3,31 @@ name: Build and release macOS app
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to build and upload assets for
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
   release:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Resolve release tag
+        env:
+          INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ -n "$INPUT_RELEASE_TAG" ]; then
+            echo "RELEASE_TAG=$INPUT_RELEASE_TAG" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_TAG=$REF_NAME" >> "$GITHUB_ENV"
+          fi
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
@@ -42,6 +58,7 @@ jobs:
       - name: Create release and upload assets
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
-          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --title "GOD Toolkit ${GITHUB_REF_NAME}" --generate-notes
-          gh release upload "${GITHUB_REF_NAME}" dist/GODToolkit-macOS.dmg dist/GODToolkit-macOS.zip dist/THIRD-PARTY-LICENSES.html --clobber
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --title "GOD Toolkit $RELEASE_TAG" --generate-notes
+          gh release upload "$RELEASE_TAG" dist/GODToolkit-macOS.dmg dist/GODToolkit-macOS.zip dist/THIRD-PARTY-LICENSES.html --clobber
