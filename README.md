@@ -4,6 +4,12 @@ A native macOS companion for converting personally owned Xbox 360 ISO backups to
 
 The app is an original SwiftUI interface. It uses the MIT-licensed [`iso2god-rs`](https://github.com/iliazeus/iso2god-rs) command-line converter as a bundled helper in release builds; its source is built separately by GitHub Actions and is not copied into this repository. This project is not affiliated with Microsoft or the authors of the referenced Iso2God application.
 
+## Preview
+
+![GOD Toolkit running on macOS](docs/images/godtoolkit-preview.jpg)
+
+*The GOD Toolkit conversion window.*
+
 ## Responsible use
 
 Use only disc images made from games you legally own and are authorized to back up. This tool does not provide game images, decrypt protected media, remove DRM, generate signatures, or circumvent console security. It converts a user-selected ISO into a GOD package and can transfer that output to a console configured by its owner.
