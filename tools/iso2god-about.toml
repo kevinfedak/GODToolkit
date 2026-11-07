@@ -1,0 +1,22 @@
+# License selection for the iso2god helper included in GOD Toolkit releases.
+# A release fails if a dependency needs a license not reviewed here.
+accepted = [
+  "Apache-2.0",
+  "MIT",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+  "Zlib",
+  "CC0-1.0",
+]
+
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+]
+
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+ignore-transitive-dependencies = false
